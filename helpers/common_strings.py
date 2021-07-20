@@ -3,7 +3,7 @@ strings = {
     'invalid_domain_or_ip': ' is not a valid domain or IP, please try again',
     'domain_or_ip_required': 'Domain or IP is required to scan',
     'auth': 'Authorization',
-    'port-scan': 'port-scan',
+    'whois': 'whois',
     'key_value': 'value',
     'input_force': 'force',
     'message': 'message',

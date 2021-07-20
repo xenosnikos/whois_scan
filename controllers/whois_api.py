@@ -20,7 +20,7 @@ request_args.add_argument(common_strings.strings['key_value'], help=common_strin
                           required=True)
 request_args.add_argument(common_strings.strings['input_force'], type=inputs.boolean, default=False)
 
-logger = logging_setup.initialize(common_strings.strings['port-scan'], 'logs/port-scan_api.log')
+logger = logging_setup.initialize(common_strings.strings['whois'], 'logs/whois_api.log')
 
 class WhoIs(Resource):
 
@@ -30,14 +30,14 @@ class WhoIs(Resource):
 
         value = args[common_strings.strings['key_value']]
 
-        logger.debug(f"Port scan request received for {value}")
+        logger.debug(f"WhoIs request received for {value}")
 
         auth = request.headers.get(common_strings.strings['auth'])
 
         authentication = auth_check.auth_check(auth)
 
         if authentication['status'] == 401:
-            logger.debug(f"Unauthenticated port scan request received for {value}")
+            logger.debug(f"Unauthenticated WhoIs request received for {value}")
             return authentication, 401
 
         if not utils.validate_domain_or_ip(value):  # if regex doesn't match domain or IP throw a 400
@@ -56,9 +56,7 @@ class WhoIs(Resource):
         
         whois_data = str(whois.whois(value))
 
-        # print(json.loads(whois_data))
         output = {}
-        # output['count'] = 0
         output['value'] = value
         output['whois_data'] = json.loads(whois_data)
         return output, 200
