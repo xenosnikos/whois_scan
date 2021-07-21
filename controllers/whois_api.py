@@ -82,12 +82,8 @@ class WhoIs(Resource):
         try:
             whois_data = str(whois.whois(value))
             output.update(json.loads(whois_data))
-            try:
-                queue_to_db.whois_response_db_addition(value, output)
-            except Exception as e:
-                logger.critical(common_strings.strings['database_issue'], e)
+            queue_to_db.whois_response_db_addition(value, output)
             return output, 200
         except Exception as e:
             logger.critical(common_strings.strings['error'], e)
             return 'whois scan is currently unavailable', 503
-    
