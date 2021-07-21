@@ -9,5 +9,5 @@ def whois_response_db_addition(value, output):
                             {'$set': {'status': common_strings.strings['status_finished'],
                                     'timeStamp': datetime.utcnow(), 'output': output}})
     except Exception as e:
-        logger = logging.getLogger()
-        logger.critical(common_strings.strings['database_issue'], e)
+        logger = logging.getLogger(common_strings.strings['whois'])
+        logger.critical(common_strings.strings['database_issue'], exc_info=e)

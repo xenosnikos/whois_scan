@@ -45,5 +45,5 @@ def mark_db_request(value, status, collection):
                                   upsert=True)
     except Exception as e:
         logger = logging.getLogger(collection)
-        logger.critical(common_strings.strings['database_issue'], e)
+        logger.critical(common_strings.strings['database_issue'], exc_info=e)
     return True
