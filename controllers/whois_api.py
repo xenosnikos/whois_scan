@@ -89,7 +89,5 @@ class WhoIs(Resource):
             return output, 200
         except Exception as e:
             logger.critical(common_strings.strings['error'], e)
-            return {
-                       'whois scan is currently unavailable'
-                   }, 503
+            return 'whois scan is currently unavailable', 503
     
