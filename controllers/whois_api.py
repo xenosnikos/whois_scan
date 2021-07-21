@@ -89,6 +89,6 @@ class WhoIs(Resource):
         except Exception as e:
             logger.critical(common_strings.strings['error'], e)
             return {
-                       common_strings.strings['message']: f"{value}" + common_strings.strings['unresolved_domain_ip']
+                       'whois scan is currently unavailable'
                    }, 503
     
