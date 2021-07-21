@@ -16,7 +16,7 @@ Authorization: Needed
 
 request_args = reqparse.RequestParser()
 
-request_args.add_argument(common_strings.strings['key_value'], help=common_strings.strings['domain_or_ip_required'],
+request_args.add_argument(common_strings.strings['key_value'], help=common_strings.strings['domain_required'],
                           required=True)
 request_args.add_argument(common_strings.strings['input_force'], type=inputs.boolean, default=False)
 
@@ -40,11 +40,12 @@ class WhoIs(Resource):
             logger.debug(f"Unauthenticated WhoIs request received for {value}")
             return authentication, 401
 
-        if not utils.validate_domain_or_ip(value):  # if regex doesn't match domain or IP throw a 400
-            logger.debug(f"Domain/IP that doesn't match regex request received - {value}")
+        if not utils.validate_domain(value):  # if regex doesn't match throw a 400
+            logger.debug(f"Domain that doesn't match regex request received - {value}")
             return {
-                       common_strings.strings['message']: f"{value}" + common_strings.strings['invalid_domain_or_ip']
+                       common_strings.strings['message']: f"{value}" + common_strings.strings['invalid_domain']
                    }, 400
+                   
         # if domain doesn't resolve into an IP, throw a 400 as domain doesn't exist in the internet
         try:
             ip = utils.resolve_domain_ip(value)
