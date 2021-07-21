@@ -3,11 +3,11 @@ import whois
 import json
 
 from flask_restful import Resource, reqparse, request, inputs
-from helpers import auth_check, logging_setup, common_strings, utils
+from helpers import auth_check, logging_setup, common_strings, utils, queue_to_db
 
 """
 API Call: POST
-Endpoint: https://{url}/whois?force=true
+Endpoint: https://{url}/v2/whois?force=true
 Body: {
         "value": "idagent.com"
       }
@@ -53,10 +53,42 @@ class WhoIs(Resource):
             return {
                        common_strings.strings['message']: f"{value}" + common_strings.strings['unresolved_domain_ip']
                    }, 400
-        
-        whois_data = str(whois.whois(value))
 
-        output = {}
-        output['value'] = value
-        output['whois_data'] = json.loads(whois_data)
-        return output, 200
+        if args[common_strings.strings['input_force']]:
+            force = True
+        else:
+            force = False        
+        
+        # based on force - either gives data back from database or gets a True back to continue with a fresh scan
+        check = utils.check_force(value, force, collection=common_strings.strings['whois'],
+                                  timeframe=int(os.environ.get('DATABASE_LOOK_BACK_TIME')))
+
+        # if a scan is already requested/in-process, we send a 202 indicating that we are working on it
+        if check == common_strings.strings['status_running'] or check == common_strings.strings['status_queued']:
+            return {'status': check}, 202
+        
+        # if database has an entry with results and force is false, send it
+        elif type(check) == dict and check['status'] == common_strings.strings['status_finished']:
+            logger.debug(f"whois scan response sent for {value} from database lookup")
+            return check['output'], 200
+        else:
+            # mark in db that the scan is queued
+            utils.mark_db_request(value, status=common_strings.strings['status_queued'],
+                                  collection=common_strings.strings['whois'])
+            output = {common_strings.strings['key_value']: value, common_strings.strings['key_ip']: ip,
+                      common_strings.strings['output_domain']: value if utils.validate_domain(value) else ''}
+
+        try:
+            whois_data = str(whois.whois(value))
+            output.update(json.loads(whois_data))
+            try:
+                queue_to_db.whois_response_db_addition(value, output)
+            except Exception as e:
+                logger.critical(common_strings.strings['database_issue'], e)
+            return output, 200
+        except Exception as e:
+            logger.critical(common_strings.strings['error'], e)
+            return {
+                       common_strings.strings['message']: f"{value}" + common_strings.strings['unresolved_domain_ip']
+                   }, 503
+    
